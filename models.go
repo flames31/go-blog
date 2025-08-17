@@ -1,6 +1,6 @@
 package main
 
-type Post struct {
+type Blog struct {
 	Title   string
 	Author  string
 	Date    string
@@ -10,7 +10,7 @@ type Post struct {
 type BlogPage struct {
 	Title     string
 	BlogTitle string
-	Posts     []Post
+	Posts     []Blog
 }
 
 type LoginPageData struct {
