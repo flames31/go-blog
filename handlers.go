@@ -2,12 +2,9 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"html/template"
+	"log"
 	"net/http"
-	"time"
-
-	"github.com/google/uuid"
 )
 
 func handleIndex() http.Handler {
@@ -26,33 +23,44 @@ func handleLogin(tmpl *template.Template, db *sql.DB) http.Handler {
 				return
 			}
 			username := r.FormValue("username")
-			//password := r.FormValue("password")
+			password := r.FormValue("password")
 
-			newUUID := uuid.New()
-			t := time.Now()
-			res, err := db.Exec(`INSERT INTO users VALUES(?,?,?,?)`, newUUID, t, t, username)
+			hashedPassword, err := hashPassword(password)
 			if err != nil {
-				w.WriteHeader(500)
+				log.Printf("%v", err)
+				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 
-			fmt.Println(res)
-			http.Redirect(w, r, "/blogs", http.StatusSeeOther)
+			if user, err := userExists(db, username); err == nil {
+				log.Printf("%v", err)
+				err := checkPassword(hashedPassword, user.HashedPassword)
+				if err != nil {
+					log.Printf("%v", err)
+					w.WriteHeader(http.StatusForbidden)
+					return
+				}
+			} else {
+				err := createUser(db, username, hashedPassword)
+				if err != nil {
+					log.Printf("%v", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+			}
 
+			http.Redirect(w, r, "/blogs", http.StatusSeeOther)
 		})
 }
 
 func handleGetAllBlogs(tmpl *template.Template, db *sql.DB) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			data := BlogPage{
-				Title:     "My Blog",
-				BlogTitle: "Go Blogger",
-				Posts: []Blog{
-					{Title: "First Post", Author: "Rahul", Date: "2025-08-13", Content: "This is my first blog post in Go!"},
-					{Title: "Second Post", Author: "Rahul", Date: "2025-08-14", Content: "Learning html/template is fun."},
-				},
+			blogs, err := getAllBlogs(db)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
 			}
-			tmpl.Execute(w, data)
+			tmpl.Execute(w, blogs)
 		})
 }

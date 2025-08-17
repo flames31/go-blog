@@ -18,6 +18,7 @@ func startServer() error {
 	if err != nil {
 		return fmt.Errorf("failed to open db : %v", err)
 	}
+	defer db.Close()
 
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
 
