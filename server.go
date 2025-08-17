@@ -5,29 +5,46 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"os"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
-var tmpl *template.Template
+type server struct {
+	tmpl *template.Template
+}
 
-func startServer() {
-	tmpl = template.Must(template.ParseGlob("templates/*.html"))
-	mux := getMux()
-
-	srv := &http.Server{
+func startServer() error {
+	srv := NewServer()
+	httpSrv := &http.Server{
 		Addr:         ":42069",
-		Handler:      mux,
+		Handler:      srv,
 		IdleTimeout:  time.Minute * 1,
 		ReadTimeout:  time.Minute * 1,
 		WriteTimeout: time.Minute * 2,
 	}
 
-	err := srv.ListenAndServe()
+	log.Printf("Server is listening on port : %v", httpSrv.Addr)
+	err := httpSrv.ListenAndServe()
 	if errors.Is(err, http.ErrServerClosed) {
 		log.Printf("server is shutting down")
 	} else {
-		log.Printf("server error : %v", err)
-		os.Exit(1)
+		return err
 	}
+
+	return nil
+}
+
+func NewServer() http.Handler {
+	srv := &server{
+		tmpl: template.Must(template.ParseGlob("templates/*.html")),
+	}
+
+	mux := mux.NewRouter()
+	addRoutes(mux, srv.tmpl)
+	var handler http.Handler = mux
+
+	handler = logRequest(handler)
+
+	return handler
 }
