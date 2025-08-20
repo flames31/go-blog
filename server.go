@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 )
 
 func startServer() error {
@@ -21,8 +22,16 @@ func startServer() error {
 	defer db.Close()
 
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
+	store := sessions.NewCookieStore([]byte("secret_key"))
+	store.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   86400, // 24 hours
+		HttpOnly: true,
+		Secure:   false, // Set to true for HTTPS
+		SameSite: http.SameSiteLaxMode,
+	}
 
-	srv := NewServer(tmpl, db)
+	srv := NewServer(tmpl, db, store)
 	httpSrv := &http.Server{
 		Addr:         ":42069",
 		Handler:      srv,
@@ -42,9 +51,9 @@ func startServer() error {
 	return nil
 }
 
-func NewServer(tmpl *template.Template, db *sql.DB) http.Handler {
+func NewServer(tmpl *template.Template, db *sql.DB, store *sessions.CookieStore) http.Handler {
 	mux := mux.NewRouter()
-	addRoutes(mux, tmpl, db)
+	addRoutes(mux, tmpl, db, store)
 	var handler http.Handler = mux
 
 	handler = logRequest(handler)

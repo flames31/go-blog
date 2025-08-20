@@ -2,9 +2,12 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/sessions"
 )
 
 func handleIndex() http.Handler {
@@ -14,7 +17,7 @@ func handleIndex() http.Handler {
 		})
 }
 
-func handleLogin(tmpl *template.Template, db *sql.DB) http.Handler {
+func handleLogin(tmpl *template.Template, db *sql.DB, store *sessions.CookieStore) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 
@@ -25,16 +28,18 @@ func handleLogin(tmpl *template.Template, db *sql.DB) http.Handler {
 			username := r.FormValue("username")
 			password := r.FormValue("password")
 
+			session, _ := store.Get(r, "userSessions")
 			hashedPassword, err := hashPassword(password)
 			if err != nil {
 				log.Printf("%v", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-
-			if user, err := userExists(db, username); err == nil {
-				log.Printf("%v", err)
-				err := checkPassword(hashedPassword, user.HashedPassword)
+			usr, err := getUser(db, username)
+			log.Printf("%v %v", usr, err)
+			if user, err := getUser(db, username); err == nil {
+				log.Printf("%v", user)
+				err := checkPassword(user.HashedPassword, password)
 				if err != nil {
 					log.Printf("%v", err)
 					w.WriteHeader(http.StatusForbidden)
@@ -48,12 +53,16 @@ func handleLogin(tmpl *template.Template, db *sql.DB) http.Handler {
 					return
 				}
 			}
-
+			user, _ := getUser(db, username)
+			session.Values["user_id"] = user.ID.String()
+			if err := session.Save(r, w); err != nil {
+				fmt.Println(err)
+			}
 			http.Redirect(w, r, "/blogs", http.StatusSeeOther)
 		})
 }
 
-func handleGetAllBlogs(tmpl *template.Template, db *sql.DB) http.Handler {
+func handleGetBlogs(tmpl *template.Template, db *sql.DB) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			blogs, err := getAllBlogs(db)
@@ -61,6 +70,9 @@ func handleGetAllBlogs(tmpl *template.Template, db *sql.DB) http.Handler {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			tmpl.Execute(w, blogs)
+			err = tmpl.ExecuteTemplate(w, "blogs.html", blogs)
+			if err != nil {
+				fmt.Println(err)
+			}
 		})
 }

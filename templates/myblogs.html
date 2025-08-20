@@ -1,0 +1,117 @@
+{{/* templates/myblogs.html */}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Blogs</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem auto;
+      max-width: 800px;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .top-actions {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .action-btn {
+      padding: 0.7rem 1.2rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      color: #fff;
+      background-color: #0077cc;
+      transition: background 0.2s;
+    }
+    .action-btn:hover {
+      background-color: #005fa3;
+    }
+    .blog-card {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .blog-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+    .blog-meta {
+      font-size: 0.9rem;
+      color: #777;
+      margin-bottom: 1rem;
+    }
+    .blog-content {
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #555;
+      margin-bottom: 1.5rem;
+    }
+    .blog-actions {
+      display: flex;
+      gap: 1rem;
+    }
+    .edit-btn,
+    .delete-btn {
+      padding: 0.6rem 1rem;
+      font-size: 0.9rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      color: #fff;
+      transition: background 0.2s;
+    }
+    .edit-btn {
+      background-color: #28a745;
+    }
+    .edit-btn:hover {
+      background-color: #218838;
+    }
+    .delete-btn {
+      background-color: #dc3545;
+    }
+    .delete-btn:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <h1>My Blogs</h1>
+
+  <div class="top-actions">
+    <a href="/blogs" class="action-btn">Back to All Blogs</a>
+    <a href="/blogs/new" class="action-btn">Create New Blog</a>
+  </div>
+
+  {{if .}}
+    {{range .}}
+      <div class="blog-card">
+        <div class="blog-title">{{.Title}}</div>
+        <div class="blog-meta">
+          By {{.Author}} | {{.Date.Format "Jan 2, 2006 15:04"}}
+        </div>
+        <div class="blog-content">{{.Content}}</div>
+        <div class="blog-actions">
+          <a href="/blogs/edit/{{.ID}}" class="edit-btn">Edit</a>
+          <form action="/blogs/delete/{{.ID}}" method="POST" style="display:inline;">
+            <button type="submit" class="delete-btn">Delete</button>
+          </form>
+        </div>
+      </div>
+    {{end}}
+  {{else}}
+    <p style="text-align: center;">You haven’t created any blogs yet.</p>
+  {{end}}
+</body>
+</html>

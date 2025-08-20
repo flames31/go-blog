@@ -12,11 +12,18 @@ func createUser(db *sql.DB, username, hashedPassword string) error {
 	return err
 }
 
-func userExists(db *sql.DB, username string) (User, error) {
+func getUser(db *sql.DB, username string) (User, error) {
 	var u User
 	row := db.QueryRow(`SELECT * FROM users WHERE username = ?;`, username)
 
-	err := row.Scan(&u)
+	err := row.Scan(
+		&u.ID,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+		&u.Username,
+		&u.HashedPassword,
+	)
+
 	if err != nil {
 		return User{}, err
 	}

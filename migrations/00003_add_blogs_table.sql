@@ -12,5 +12,5 @@ CREATE TABLE blogs (
 
 -- +goose Down
 -- +goose StatementBegin
-SELECT 'down SQL query';
+DROP TABLE blogs;
 -- +goose StatementEnd

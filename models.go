@@ -18,7 +18,7 @@ type Blog struct {
 type BlogPage struct {
 	Title     string
 	BlogTitle string
-	Posts     []Blog
+	Blogs     []Blog
 }
 
 type LoginPageData struct {

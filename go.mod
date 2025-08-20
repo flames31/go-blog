@@ -4,9 +4,12 @@ go 1.23.3
 
 require (
 	github.com/gorilla/mux v1.8.1
+	github.com/gorilla/sessions v1.4.0
 	golang.org/x/crypto v0.41.0
 	modernc.org/sqlite v1.38.2
 )
+
+require github.com/gorilla/securecookie v1.1.2 // indirect
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
